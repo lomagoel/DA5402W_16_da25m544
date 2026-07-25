@@ -1,1 +1,10 @@
 /training_dataset
+data_division.py
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+

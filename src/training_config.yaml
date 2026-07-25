@@ -1,5 +1,5 @@
 
-data_dir: "training_dataset"  # dataset root directory
+data_dir: "/gcs/caltech_1000/data"  # dataset root directory
 experiment_name: "caltech101-mobilenetv2"
 tracking_uri: null  # optional MLflow tracking URI
 
@@ -20,4 +20,4 @@ pretrained: true
 # YAML counterpart for CLI --unfreeze-backbone (inverse semantics).
 freeze_backbone: true
 
-device: "cpu"  # auto | cpu | cuda | mps
+device: "cuda"  # auto | cpu | cuda | mps

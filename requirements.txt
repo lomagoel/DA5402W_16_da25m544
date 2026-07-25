@@ -1,3 +1,7 @@
+# tracking 
 mlflow
-torch
+
+# data processing
+pyyaml
 torchvision
+pillow
