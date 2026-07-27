@@ -1,33 +1,4 @@
 from __future__ import annotations
-
-# load files from dolfer home/amol/Downloads/caltech-101/
-# it has images of different categories. You can use the following code to load the images and their corresponding labels into a dataset
-# prepare five parts: training set 1 (20%) .. training set 5 (20%) and a validation set (20%). You can use the following code to split the dataset into these parts:
-
-def divide_dataset():
-    # divide the dataset into num_parts equal parts part1/category1, part2 ..
-    # return a list of datasets
-    # read each folder home/amol/Downloads/caltech-101/category1
-    return None
-
-# load files from dolfer home/amol/Downloads/caltech-101/
-# it has images of different categories. You can use the following code to load the images and their corresponding labels into a dataset
-# prepare five parts: training set 1 (20%) .. training set 5 (20%) and a validation set (20%). You can use the following code to split the dataset into these parts:
-"""Dataset preparation utilities for Caltech-101.
-
-def divide_dataset():
-    # divide the dataset into num_parts equal parts part1/category1, part2 ..
-    # return a list of datasets
-    # read each folder home/amol/Downloads/caltech-101/category1
-Assumes the following on-disk layout:
-
-  ~/Downloads/caltech-101/<category_name>/*.jpg|*.png|...
-
-Each category is split independently (stratified) so every train/val split has
-roughly the same per-class distribution.
-"""
-
-
 import os
 import random
 from dataclasses import dataclass
@@ -44,6 +15,46 @@ class Split:
 
     items: List[Tuple[str, int]]
 
+def download_data(data_dir: str | os.PathLike) -> os.PathLike:
+    """Download the Caltech-101 dataset in temp and extract it to `data_dir` and delete temp file."""
+    import requests
+    import zipfile
+    url = "https://www.kaggle.com/api/v1/datasets/download/imbikramsaha/caltech-101"
+
+    data_dir = Path(data_dir)
+    temp_dir = Path(os.path.expanduser("~/temp"))
+    zip_name = "caltech.zip"
+    if not temp_dir.exists():
+        os.mkdir(temp_dir)
+    if not data_dir.exists():
+        os.mkdir(data_dir)
+
+    zip_path = temp_dir / zip_name
+    
+    
+    if not (data_dir/"train").exists():
+        
+        print(f"Downloading Caltech-101 dataset from {url}...")
+        response = requests.get(url, stream=True, verify=False)
+        response.raise_for_status()
+        with open(zip_path, "wb") as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                f.write(chunk)
+
+    # Extract the dataset
+    print(f"Extracting {zip_path}...")
+    with zipfile.ZipFile(zip_path, "r") as zip_ref:
+        zip_ref.extractall(path=data_dir)
+
+    categories_dir = data_dir / "caltech-101" 
+
+    # delete temp download directory
+    import shutil
+    shutil.rmtree(temp_dir)
+
+    return categories_dir
+    
+    
 
 def _is_image_file(p: Path) -> bool:
     return p.is_file() and p.suffix.lower() in SUPPORTED_EXTS
@@ -66,12 +77,12 @@ def _collect_by_category(root_dir: Path) -> Dict[str, List[str]]:
 
 
 def divide_dataset(
-    caltech_root: str | os.PathLike = os.path.expanduser("~/Downloads/archive/caltech-101"),
+    caltech_root,
     *,
     num_train_parts: int = 5,
 
     seed: int = 42,
-) -> Tuple[List[Split], Split, Dict[str, int]]:
+) -> Tuple[List[Split], Split]:
     """Divide Caltech-101 into 5 training folds (20% each) and 20% validation.
 
     Returns:
@@ -85,8 +96,6 @@ def divide_dataset(
       - Deterministic given `seed`.
       - Requires `val_fraction == 1 / (num_train_parts + 1)` for equal 20% parts.
     """
-
-
 
     root_dir = Path(caltech_root)
     by_cat = _collect_by_category(root_dir)
@@ -118,21 +127,31 @@ def divide_dataset(
             )
             start_idx = end_idx
 
-    # save labelmap as a text file in the output directory
-    output_dir = Path(os.path.expanduser("~/Downloads/caltech_splits"))
-    output_dir.mkdir(parents=True, exist_ok=True)
-    labelmap_path = output_dir / "label_map.txt"
+    return train_splits, val_split
+
+def get_label_map(data_dir:Path) -> Dict:
+    """Prepare the label map file for Caltech-101 dataset."""
+
+    by_cat = _collect_by_category(data_dir)
+    categories = sorted(by_cat.keys())
+    label_map = {cat: i for i, cat in enumerate(categories)}
+
+    
+    labelmap_path = data_dir / "label_map.txt"
     with open(labelmap_path, "w") as f:
         for cat, idx in label_map.items():
             f.write(f"{cat} {idx}\n")
 
-    return train_splits, val_split, label_map
+    return label_map
+
+
+
 
 def save_splits(
     train_splits: List[Split],
     val_split: Split,
     label_map: Dict[str, int],
-    output_dir: str | os.PathLike = os.path.expanduser("~/Downloads/caltech_splits"),
+    output_dir: str | os.PathLike
 ) -> None:
     """Save the splits to disk as image files.
     Save image instead of text files.
@@ -169,5 +188,12 @@ def save_splits(
 
 
 if __name__ == "__main__":
-    train_splits, val_split, label_map = divide_dataset()
-    save_splits(train_splits, val_split, label_map)
+    import yaml
+    with open("src/training_config.yaml", "r") as f:
+        config_dict = yaml.safe_load(f)
+    config_dict["data_dir"]="./caltech_1000"
+    caltech_root = download_data(config_dict["data_dir"])
+    train_splits, val_split = divide_dataset(caltech_root)
+    save_splits(train_splits, val_split,get_label_map(caltech_root),config_dict["data_dir"])
+    
+    

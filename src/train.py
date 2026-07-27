@@ -3,12 +3,9 @@
 from __future__ import annotations
 
 import argparse
-import json
-import os
-import random
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Dict
 
 import mlflow
 import mlflow.pytorch
@@ -86,12 +83,10 @@ class CaltechFolderDataset(Dataset):
 
 
 
-def main() -> None:
+def train(training_config:Dict=None) -> None:
     """Fine-tune the model. use mlflow to log the training process and save the model."""
-    # read training config yaml
-    with open("src/training_config.yaml", "r") as f:
-        config_dict = yaml.safe_load(f)
-    config = TrainConfig(**config_dict)
+    
+    config = TrainConfig(**training_config)
     train_loader = DataLoader(
         dataset=CaltechFolderDataset(
             roots=[Path(config.data_dir) / "train"],
@@ -150,4 +145,7 @@ def main() -> None:
     # evaluate 
 
 if __name__ == "__main__":
-    main()
+    argument_parser = argparse.ArgumentParser(description="Train a MobileNetV2 model on the Caltech101 dataset.")
+    argument_parser.add_argument("--data_dir", type=str, default=None, help="Path to the training data directory.")
+    args = argument_parser.parse_args()
+    train(**args)

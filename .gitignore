@@ -7,4 +7,11 @@ __pycache__/
 *.pyo
 *.pyd
 
+# folder
+/tmp
+
+# files
+*.jpg
+personal
+personal.pub
 
