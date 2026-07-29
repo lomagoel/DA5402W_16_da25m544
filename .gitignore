@@ -15,3 +15,5 @@ __pycache__/
 personal
 personal.pub
 
+# system files
+.DS_Store
