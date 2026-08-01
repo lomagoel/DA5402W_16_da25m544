@@ -6,20 +6,17 @@ on:
     branches:
       - main
 
-        
-env:
-  SA_KEY: ${{secrets.SA_KEY}}
-  ARTIFACT_REPO_REGION: ${{vars.ARTIFACT_REPO_REGION}}
-  PROJECT_ID: ${{secrets.PROJECT_ID}}
-  ARTIFACT_REGISTRY_REPO_NAME: ${{vars.ARTIFACT_REGISTRY_REPO_NAME}}
-  IMAGE_NAME: caltech-mobilenetv2
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  IMAGE_URI: "${{vars.ARTIFACT_REPO_REGION}}-docker-pkg-dev/${{secrets.PROJECT_ID}}/${{vars.ARTIFACT_REGISTRY_REPO_NAME}}/caltech-mobilenetv2:${{github.sha}}"
-
 
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
+    environment: prd
+    env:
+      SA_KEY: ${{secrets.SA_KEY}}
+      IMAGE_URI: "${{vars.IMAGE_URI}}/caltech-mobilenetv2:${{github.sha}}"
+      
+
+      
     steps:
       - name: download code
         uses: actions/checkout@v4
@@ -28,14 +25,14 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
 
       - name: build
-        run:  sudo docker build -t ${{env.IMAGE_URI}} .
+        run:  sudo docker build -t $IMAGE_URI .
 
       - name: authenticate using SA
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: ${{ secrets.SA_KEY }}
+          credentials_json: $SA_KEY 
       - name: configure docker auth mechanism
-        run: gcloud auth configure-docker "${{env.ARTIFACT_REPO_REGION}}-docker-pkg-dev"
+        run: gcloud auth configure-docker ${{vars.AUTH_URL}}
 
       - name: push to artifact registry
         run:  sudo docker push -t $IMAGE_URI
