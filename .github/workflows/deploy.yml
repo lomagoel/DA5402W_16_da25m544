@@ -14,7 +14,7 @@ env:
   ARTIFACT_REGISTRY_REPO_NAME: ${{vars.ARTIFACT_REGISTRY_REPO_NAME}}
   IMAGE_NAME: caltech-mobilenetv2
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  IMAGE_URI: "${{vars.ARTIFACT_REPO_REGION}}-docker-pkg-dev/${{secrets.PROJECT_ID}}/${{vars.ARTIFACT_REGISTRY_REPO_NAME}}/caltech-mobilenetv2:{{github.sha}}"
+  IMAGE_URI: "${{vars.ARTIFACT_REPO_REGION}}-docker-pkg-dev/${{secrets.PROJECT_ID}}/${{vars.ARTIFACT_REGISTRY_REPO_NAME}}/caltech-mobilenetv2:${{github.sha}}"
 
 
 jobs:
@@ -28,7 +28,7 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
 
       - name: build
-        run:  sudo docker build -t ${{env.IMAGE_URI}} 
+        run:  sudo docker build -t ${{env.IMAGE_URI}} .
 
       - name: authenticate using SA
         uses: google-github-actions/auth@v2
