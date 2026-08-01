@@ -16,7 +16,7 @@ env:
   PROJECT_ID: ${{secrets.PROJECT_ID}}
   ARTIFACT_REGISTRY_REPO_NAME: ${{vars.ARTIFACT_REGISTRY_REPO_NAME}}
   IMAGE_NAME: caltech-mobilenetv2
-  IMAGE_URI: "${{vars.ARTIFACT_REPO_REGION}}-docker-pkg-dev/${{env.PROJECT_ID}}/${{env.ARTIFACT_REGISTRY_REPO_NAME}}/${{env.IMAGE_NAME}}:{{github.sha}}"
+  IMAGE_URI: "${{vars.ARTIFACT_REPO_REGION}}-docker-pkg-dev/${{secrets.PROJECT_ID}}/${{vars.ARTIFACT_REGISTRY_REPO_NAME}}/caltech-mobilenetv2:{{github.sha}}"
 
 
 jobs:
@@ -40,7 +40,7 @@ jobs:
         with:
           credentials_json: ${{ secrets.SA_KEY }}
       - name: configure docker auth mechanism
-        run: gcloud auth configure-docker "${{ARTIFACT_REPO_REGION}}-docker-pkg-dev"
+        run: gcloud auth configure-docker "${{env.ARTIFACT_REPO_REGION}}-docker-pkg-dev"
 
       - name: push to artifact registry
         run:  docker push -t $IMAGE_URI
