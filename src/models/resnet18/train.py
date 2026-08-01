@@ -1,9 +1,9 @@
 import torch.nn as nn
 from torchvision import datasets, models
-from data_helper import train_val_split
+from src.models.helpers.data_helper import train_val_split
 import mlflow
-from helpers.model_trainer import ModelTrainer
-from helpers.ray_helper import RayDriver, uniform_space, random_choice
+from src.models.helpers.model_trainer import ModelTrainer
+from src.models.helpers.ray_helper import RayDriver, uniform_space, random_choice
 
 
 MLFLOW_EXPERIMENT_NAME = 'MLOPS_PROJECT'
@@ -11,7 +11,7 @@ MLFLOW_TRACKING_URI = 'http://127.0.0.1:5000'
 NUM_TUNE_TRIALS = 5
 
 
-caltech101_data = datasets.Caltech101(root='/tmp/data', download=True)
+caltech101_data = datasets.Caltech101(root='./temp', download=True)
 
 train_dataset, test_dataset = train_val_split(caltech101_data)
 _, val_dataset = train_val_split(train_dataset.dataset)

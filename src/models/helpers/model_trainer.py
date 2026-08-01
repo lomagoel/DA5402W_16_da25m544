@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from data_helper import train_val_split, dataloader
+from src.models.helpers.data_helper import train_val_split, dataloader
 from torchmetrics import MeanMetric, MetricCollection, Accuracy, Precision, Recall, F1Score, AUROC
 
 

@@ -1,4 +1,4 @@
-from model_trainer import ModelTrainer
+from src.models.helpers.model_trainer import ModelTrainer
 import ray
 from ray import tune
 from ray.air.integrations.mlflow import setup_mlflow
