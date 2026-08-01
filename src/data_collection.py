@@ -20,19 +20,16 @@ def download_data(data_dir: str | os.PathLike) -> os.PathLike:
     import requests
     import zipfile
     url = "https://www.kaggle.com/api/v1/datasets/download/imbikramsaha/caltech-101"
+    data_dir = Path("./temp")
 
-    data_dir = Path(data_dir)
-    temp_dir = Path(os.path.expanduser("~/temp"))
     zip_name = "caltech.zip"
-    if not temp_dir.exists():
-        os.mkdir(temp_dir)
     if not data_dir.exists():
         os.mkdir(data_dir)
 
-    zip_path = temp_dir / zip_name
+    zip_path = data_dir / zip_name
     
     
-    if not (data_dir/"train").exists():
+    if not (data_dir/zip_name).exists():
         
         print(f"Downloading Caltech-101 dataset from {url}...")
         response = requests.get(url, stream=True, verify=False)
@@ -41,17 +38,14 @@ def download_data(data_dir: str | os.PathLike) -> os.PathLike:
             for chunk in response.iter_content(chunk_size=8192):
                 f.write(chunk)
 
-    # Extract the dataset
-    print(f"Extracting {zip_path}...")
-    with zipfile.ZipFile(zip_path, "r") as zip_ref:
-        zip_ref.extractall(path=data_dir)
+        # Extract the dataset
+        print(f"Extracting {zip_path}...")
+        with zipfile.ZipFile(zip_path, "r") as zip_ref:
+            zip_ref.extractall(path=data_dir)
 
     categories_dir = data_dir / "caltech-101" 
 
-    # delete temp download directory
-    import shutil
-    shutil.rmtree(temp_dir)
-
+    
     return categories_dir
     
     
@@ -122,6 +116,11 @@ def divide_dataset(
             if part_idx == num_train_parts - 1:
                 # Last part takes any remaining images due to rounding
                 end_idx = num_imgs
+                val_split.items.extend(
+                (img, label_map[cat]) for img in imgs[start_idx:end_idx]
+            )
+                break
+
             train_splits[part_idx].items.extend(
                 (img, label_map[cat]) for img in imgs[start_idx:end_idx]
             )
@@ -144,7 +143,7 @@ def get_label_map(data_dir:Path) -> Dict:
 
     return label_map
 
-
+import shutil
 
 
 def save_splits(
@@ -174,26 +173,29 @@ def save_splits(
             cat_dir = part_dir / cat_name
             cat_dir.mkdir(exist_ok=True)
             dest_path = cat_dir / Path(img_path).name
-            os.link(img_path, dest_path)  # Create a hard link to save space
+            if not dest_path.exists():
+                shutil.copy(img_path, dest_path,)  # Copy the image to the new location
 
     # Save validation split
-    val_dir = output_dir / "val"
+    val_dir = output_dir / "test"
     val_dir.mkdir(exist_ok=True)
     for img_path, label in val_split.items:
         cat_name = next(cat for cat, idx in label_map.items() if idx == label)
         cat_dir = val_dir / cat_name
         cat_dir.mkdir(exist_ok=True)
         dest_path = cat_dir / Path(img_path).name
-        os.link(img_path, dest_path)  # Create a hard link to save space
+        if not dest_path.exists():
+            shutil.copy(img_path, dest_path,)  # Copy the image to the new location
+            # os.link(img_path, dest_path)  # Create a hard link to save space
 
 
 if __name__ == "__main__":
     import yaml
     with open("src/training_config.yaml", "r") as f:
         config_dict = yaml.safe_load(f)
-    config_dict["data_dir"]="./caltech_1000"
+    #config_dict["data_dir"]="./caltech_1000"
     caltech_root = download_data(config_dict["data_dir"])
     train_splits, val_split = divide_dataset(caltech_root)
-    save_splits(train_splits, val_split,get_label_map(caltech_root),config_dict["data_dir"])
+    save_splits(train_splits, val_split,get_label_map(caltech_root),"./caltech_1000")
     
     

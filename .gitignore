@@ -1,4 +1,3 @@
-/training_dataset
 data_division.py
 
 # Python cache files
@@ -9,9 +8,12 @@ __pycache__/
 
 # folder
 /tmp
+/temp
+/caltech_1000
 
 # files
 *.jpg
 personal
 personal.pub
 
+/data
