@@ -5,10 +5,7 @@ on:
   push:
     branches:
       - main
-    paths:
-      - src/*
-        scripts/*
-        training_dataset.dvc
+
         
 env:
   SA_KEY: ${{secrets.SA_KEY}}
