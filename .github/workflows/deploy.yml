@@ -23,9 +23,6 @@ jobs:
     steps:
       - name: download code
         uses: actions/checkout@v4
-
-      - name: install docker
-        run: sudo apt-get install docker
       
       - name: gcloud CLI
         uses: google-github-actions/setup-gcloud@v2
