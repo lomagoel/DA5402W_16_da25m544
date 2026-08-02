@@ -11,7 +11,7 @@ WORKDIR /app
 
 # install requirements
 COPY ./requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt --break-system-packages
 
 # copy content 
 COPY  ./src/* ./src/
