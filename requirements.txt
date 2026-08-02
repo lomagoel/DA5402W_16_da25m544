@@ -1,6 +1,6 @@
-mlflow==3.14.0
-mlflow_skinny==3.10.1
-mlflow_tracing==3.14.0
-PyYAML==6.0.1
-ray==2.56.1
-torchmetrics==1.9.0
+mlflow
+mlflow_skinny
+mlflow_tracing
+PyYAML
+ray
+torchmetrics
