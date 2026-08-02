@@ -10,7 +10,7 @@ rm -rf /var/lib/apt/lists/* # clear downloaded package metadata
 WORKDIR /app
 
 # install requirements
-COPY ./reqirements.txt .
+COPY ./requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # copy content 
