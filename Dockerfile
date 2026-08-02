@@ -1,5 +1,5 @@
 # take pytorch with cuda image
-FROM pytorch/pytorch:2.1.0-cuda11.8-cudnn8-runtime
+FROM pytorch/pytorch:2.13.0-cuda13.0-cudnn9-runtime
 
 # image lib update
 RUN apt-get update && apt-get install -y --no-install-recommends \
