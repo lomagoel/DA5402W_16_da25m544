@@ -30,9 +30,9 @@ jobs:
         uses: google-github-actions/auth@v2
         with:
           credentials_json:  ${{secrets.SA_KEY}}
-          
+
       - name: configure docker auth mechanism
         run: gcloud auth configure-docker ${{vars.AUTH_URL}}
 
       - name: push to artifact registry
-        run:  sudo docker push -t $IMAGE_URI
+        run:  sudo docker push $IMAGE_URI
