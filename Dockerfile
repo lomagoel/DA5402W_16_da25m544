@@ -14,7 +14,8 @@ COPY ./reqirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # copy content 
-COPY --parents ./src/* ./scripts/* .
+COPY  ./src/* ./src/
+
 
 
 ENTRYPOINT ["python","train.py"]
