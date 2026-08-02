@@ -18,4 +18,4 @@ COPY  ./src/* ./src/
 
 
 
-ENTRYPOINT ["python","train.py"]
+ENTRYPOINT ["python","src.models.resnet18.train"]
