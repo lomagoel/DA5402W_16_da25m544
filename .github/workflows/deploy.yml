@@ -24,7 +24,7 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
 
       - name: build
-        run:  sudo docker build -t $IMAGE_URI .
+        run:  docker build -t $IMAGE_URI .
 
       - name: authenticate using SA
         uses: google-github-actions/auth@v2
@@ -35,4 +35,4 @@ jobs:
         run: gcloud auth configure-docker ${{vars.AUTH_URL}}
 
       - name: push to artifact registry
-        run:  sudo docker push $IMAGE_URI
+        run:  docker push $IMAGE_URI
