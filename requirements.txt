@@ -4,3 +4,4 @@ mlflow_tracing
 PyYAML
 ray
 torchmetrics
+google-cloud-storage
