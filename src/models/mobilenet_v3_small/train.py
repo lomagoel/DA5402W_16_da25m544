@@ -16,9 +16,9 @@ caltech101_data = datasets.Caltech101(root='./temp', download=True)
 train_dataset, test_dataset = train_val_split(caltech101_data)
 _, val_dataset = train_val_split(train_dataset.dataset)
 
-model = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
-in_final_layer = model.fc.in_features
-model.fc = nn.Linear(in_final_layer, len(caltech101_data.categories))
+model = models.mobilenet_v3_small(weights=models.MobileNet_V3_Small_Weights.DEFAULT)
+in_final_layer = model.classifier.in_features
+model.classifier = nn.Linear(in_final_layer, len(caltech101_data.categories))
 
 search_space = {
     'optim':{
@@ -30,4 +30,4 @@ search_space = {
 
 model_pipeline = ModelPipeline(MLFLOW_EXPERIMENT_NAME, MLFLOW_TRACKING_URI)
 best_config = model_pipeline.tune(model, val_dataset.dataset, NUM_TUNE_TRIALS, search_space)
-model_pipeline.train(model, train_dataset, test_dataset, best_config, 'resnet18')
+model_pipeline.train(model, train_dataset, test_dataset, best_config, 'mobilenet_v3_small')
