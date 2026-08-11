@@ -45,5 +45,6 @@ if __name__ == "__main__":
         action="store_true",
         help="Include data download step.",
     )
+    print("Starting training")
     args = argument_parser.parse_args()
     main(args)
