@@ -9,6 +9,7 @@ from src.models.helpers.ray_helper import uniform_space, random_choice
 MLFLOW_EXPERIMENT_NAME = 'MLOPS_PROJECT'
 MLFLOW_TRACKING_URI = 'http://127.0.0.1:5000'
 NUM_TUNE_TRIALS = 5
+MODEL_NAME = 'mobilenet_v3_small'
 
 
 caltech101_data = datasets.Caltech101(root='./temp', download=True)
@@ -16,9 +17,15 @@ caltech101_data = datasets.Caltech101(root='./temp', download=True)
 train_dataset, test_dataset = train_val_split(caltech101_data)
 _, val_dataset = train_val_split(train_dataset.dataset)
 
-model = models.mobilenet_v3_small(weights=models.MobileNet_V3_Small_Weights.DEFAULT)
-in_final_layer = model.classifier.in_features
-model.classifier = nn.Linear(in_final_layer, len(caltech101_data.categories))
+
+model_pipeline = ModelPipeline(MLFLOW_EXPERIMENT_NAME, MLFLOW_TRACKING_URI)
+model = model_pipeline.get_model(MODEL_NAME)
+
+if not model:
+    model = models.mobilenet_v3_small(weights=models.MobileNet_V3_Small_Weights.DEFAULT)
+    in_final_layer = model.classifier[3].in_features
+    model.classifier[3] = nn.Linear(in_final_layer, len(caltech101_data.categories))
+
 
 search_space = {
     'optim':{
@@ -28,6 +35,5 @@ search_space = {
     'batch_size': random_choice([32, 64]),
 }
 
-model_pipeline = ModelPipeline(MLFLOW_EXPERIMENT_NAME, MLFLOW_TRACKING_URI)
-best_config = model_pipeline.tune(model, val_dataset.dataset, NUM_TUNE_TRIALS, search_space)
-model_pipeline.train(model, train_dataset, test_dataset, best_config, 'mobilenet_v3_small')
+best_config = model_pipeline.tune(model, val_dataset, NUM_TUNE_TRIALS, search_space)
+model_pipeline.train(model, train_dataset, test_dataset, best_config, MODEL_NAME)

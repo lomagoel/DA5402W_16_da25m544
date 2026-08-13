@@ -31,7 +31,7 @@ class RayDriver():
 
     def _worker_job(self, tune_config, data):
         context = ray.tune.get_context()
-        run_name = f'RAY_WORKER_{context.get_trial_id()}' 
+        run_name = f'ray_worker_{context.get_trial_id()}' 
         worker = RayWorker(run_name, self.mlflow_config)
         worker.tune(self.model, data, tune_config)
 
