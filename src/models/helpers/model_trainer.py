@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from src.models.helpers.data_helper import train_val_split, dataloader
+from src.models.helpers.data_helper import dataloader
 from torchmetrics import MeanMetric, MetricCollection, Accuracy, Precision, Recall, F1Score, AUROC
 
 
@@ -13,10 +13,9 @@ class ModelTrainer():
         self.optimizer = optim.Adam(self.model.parameters(), **optim_config)
         self.loss_fn = nn.CrossEntropyLoss()
 
-    def train(self, data, epochs=3, tune_callback=None):
+    def train(self, train_dataset, val_dataset, label_to_idx,epochs=3, tune_callback=None):
 
-        self.num_classes = len(data.categories)
-        train_dataset, val_dataset = train_val_split(data)
+        self.num_classes = len(label_to_idx)
         train_loader = dataloader(train_dataset, batch_size=self.batch_size, shuffle=True)
         val_loader = dataloader(val_dataset, batch_size=self.batch_size, shuffle=False)
 

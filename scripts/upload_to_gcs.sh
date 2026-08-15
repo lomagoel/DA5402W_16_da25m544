@@ -3,8 +3,8 @@
 # ==========================================
 # Configuration Variables
 # ==========================================
-LOCAL_FOLDER_PATH="./training_dataset/data"      # The local folder to upload
-GCS_BUCKET_URI="gs://caltech_1000/data"  # The destination bucket URI
+LOCAL_FOLDER_PATH="/home/amol/Downloads/archive/caltech-101/"      # The local folder to upload
+GCS_BUCKET_URI="gs://dataset_mtech/caltech-101/"  # The destination bucket URI
 SERVICE_ACCOUNT_JSON="./gcp-key.json"   # @TODO: shift to secrests
 
 # ==========================================
@@ -28,7 +28,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # clean previous training data 
-gsutil rm -r gs://caltech_1000/data
+#gsutil rm -r $GCS_BUCKET_URI
 
 # 3. Upload the folder using multithreading (-m) for faster transfers
 # Using 'rsync' ensures it only uploads new or changed files, saving bandwidth

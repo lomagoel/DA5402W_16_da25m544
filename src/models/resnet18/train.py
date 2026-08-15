@@ -2,8 +2,9 @@ import torch.nn as nn
 from torchvision import datasets, models
 
 from src.models.helpers.model_pipeline import ModelPipeline
-from src.models.helpers.data_helper import train_val_split
 from src.models.helpers.ray_helper import uniform_space, random_choice
+
+from src.models.helpers.data_helper import train_dataset, val_dataset, test_dataset, label_to_idx   
 
 
 MLFLOW_EXPERIMENT_NAME = 'MLOPS_PROJECT'
@@ -11,14 +12,11 @@ MLFLOW_TRACKING_URI = 'http://127.0.0.1:5000'
 NUM_TUNE_TRIALS = 5
 
 
-caltech101_data = datasets.Caltech101(root='./temp', download=True)
 
-train_dataset, test_dataset = train_val_split(caltech101_data)
-_, val_dataset = train_val_split(train_dataset.dataset)
 
 model = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
 in_final_layer = model.fc.in_features
-model.fc = nn.Linear(in_final_layer, len(caltech101_data.categories))
+model.fc = nn.Linear(in_final_layer, len(label_to_idx))  # Adjust the final layer for the number of classes
 
 search_space = {
     'optim':{
@@ -29,5 +27,5 @@ search_space = {
 }
 
 model_pipeline = ModelPipeline(MLFLOW_EXPERIMENT_NAME, MLFLOW_TRACKING_URI)
-best_config = model_pipeline.tune(model, val_dataset.dataset, NUM_TUNE_TRIALS, search_space)
-model_pipeline.train(model, train_dataset, test_dataset, best_config, 'resnet18')
+best_config = model_pipeline.tune(model, val_dataset, NUM_TUNE_TRIALS, search_space)
+model_pipeline.train(model, train_dataset, test_dataset, label_to_idx, best_config, 'resnet18')

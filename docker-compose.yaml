@@ -1,0 +1,8 @@
+services:
+  my-web-app:
+    # This names the final image that gets created
+    image: custom-node-app:1.1
+    
+    # This tells Compose where to find the Dockerfile ('.' means current directory)
+    build: .
+  

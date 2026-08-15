@@ -17,7 +17,10 @@ class ModelPipeline():
 
     def tune(self, model, dataset, num_trials, search_space):
         print('Tuning...')
-        tuner = RayDriver(model, {'cpu': 1, 'gpu': 1/num_trials, 'accelerator_type:RTX': 1/num_trials}, self.mlflow_config)
+        tuner = RayDriver(model, {'cpu': 1, 
+                                  'gpu':0,# 1/num_trials, 
+                                  'accelerator_type:RTX': 0},#1/num_trials}
+                                   self.mlflow_config)
         best_config = tuner.tune(dataset, search_space, num_samples=num_trials)
         tuner.shutdown()
         return best_config

@@ -16,9 +16,9 @@ class RayWorker():
         tune.report(report_metrics)
         self.mlflow.log_metrics(final_metrics, step=epoch)
 
-    def tune(self, model, data, tune_config, epochs=3):
+    def tune(self, model, train_dataset, validation_dataset, label_to_idx, tune_config, epochs=3):
         trainer = ModelTrainer(model, tune_config['batch_size'], tune_config['optim'])
-        trainer.train(data, epochs=epochs, tune_callback=lambda r,f,e: self._log(r, f, e))
+        trainer.train(train_dataset, validation_dataset, label_to_idx, epochs=epochs, tune_callback=lambda r,f,e: self._log(r, f, e))
         self.mlflow.end_run()
 
 

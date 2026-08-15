@@ -19,3 +19,5 @@ personal.pub
 # system files
 .DS_Store
 /data
+
+gcp-key.json
