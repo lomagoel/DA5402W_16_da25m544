@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vision Model — Image Classifier</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+    <div class="page">
+        <header class="page-header">
+            <span class="eyebrow">VISION MODEL // INFERENCE</span>
+            <h1>Image Classifier</h1>
+            <p class="subtitle">Point it at an image. It'll tell you what it sees.</p>
+        </header>
+
+        <div id="model-status" class="status-pill">
+            <span class="status-dot"></span>
+            <span id="status-text">Checking model status…</span>
+        </div>
+
+        <main class="panel">
+            <form id="predict-form">
+                <label for="file-input" class="viewfinder" id="dropzone">
+                    <span class="bracket bracket-tl"></span>
+                    <span class="bracket bracket-tr"></span>
+                    <span class="bracket bracket-bl"></span>
+                    <span class="bracket bracket-br"></span>
+                    <div class="scan-line" id="scan-line"></div>
+
+                    <img id="preview" alt="" />
+                    <div class="viewfinder-prompt" id="dropzone-text">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 7C4 5.89543 4.89543 5 6 5H8L9.5 3H14.5L16 5H18C19.1046 5 20 5.89543 20 7V17C20 18.1046 19.1046 19 18 19H6C4.89543 19 4 18.1046 4 17V7Z" stroke="currentColor" stroke-width="1.5"/>
+                            <circle cx="12" cy="12" r="3.5" stroke="currentColor" stroke-width="1.5"/>
+                        </svg>
+                        <span>Drop an image, or click to browse</span>
+                    </div>
+
+                    <input type="file" id="file-input" name="file" accept="image/*" hidden />
+                </label>
+
+                <button type="submit" id="submit-btn" disabled>
+                    <span id="submit-label">Run Inference</span>
+                </button>
+            </form>
+
+            <section id="result-panel" class="result-panel hidden">
+                <div class="result-header">
+                    <span class="mono-label">RESULT</span>
+                </div>
+                <div class="result-main">
+                    <span id="result-class" class="result-class"></span>
+                    <span id="result-confidence" class="result-confidence mono"></span>
+                </div>
+                <div id="topk-list" class="topk-list"></div>
+            </section>
+
+            <div id="error-panel" class="alert-error hidden">
+                <span class="mono-label">ERROR</span>
+                <span id="error-text"></span>
+            </div>
+        </main>
+
+        <footer class="page-footer">
+            <span class="mono">GET /health · POST /predict · POST /predict/base64</span>
+        </footer>
+    </div>
+
+    <script>
+        const form = document.getElementById("predict-form");
+        const fileInput = document.getElementById("file-input");
+        const dropzone = document.getElementById("dropzone");
+        const dropzoneText = document.getElementById("dropzone-text");
+        const preview = document.getElementById("preview");
+        const submitBtn = document.getElementById("submit-btn");
+        const submitLabel = document.getElementById("submit-label");
+        const resultPanel = document.getElementById("result-panel");
+        const resultClass = document.getElementById("result-class");
+        const resultConfidence = document.getElementById("result-confidence");
+        const topkList = document.getElementById("topk-list");
+        const errorPanel = document.getElementById("error-panel");
+        const errorText = document.getElementById("error-text");
+        const statusPill = document.getElementById("model-status");
+        const statusText = document.getElementById("status-text");
+
+        async function checkHealth() {
+            try {
+                const res = await fetch("/health");
+                const data = await res.json();
+                if (data.status === "ok") {
+                    statusText.textContent = `${data.model_name} · ${data.model_stage} · v${data.model_version}`;
+                    statusPill.className = "status-pill status-ok";
+                } else {
+                    statusText.textContent = "No model loaded — predictions unavailable";
+                    statusPill.className = "status-pill status-warn";
+                }
+            } catch (e) {
+                statusText.textContent = "Can't reach the API";
+                statusPill.className = "status-pill status-error";
+            }
+        }
+        checkHealth();
+
+        fileInput.addEventListener("change", () => {
+            const file = fileInput.files[0];
+            if (!file) return;
+            preview.src = URL.createObjectURL(file);
+            preview.style.display = "block";
+            dropzoneText.style.display = "none";
+            submitBtn.disabled = false;
+            hideResults();
+        });
+
+        ["dragover", "dragleave", "drop"].forEach(evt => {
+            dropzone.addEventListener(evt, (e) => e.preventDefault());
+        });
+        dropzone.addEventListener("dragover", () => dropzone.classList.add("dragging"));
+        dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragging"));
+        dropzone.addEventListener("drop", (e) => {
+            dropzone.classList.remove("dragging");
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                fileInput.files = e.dataTransfer.files;
+                fileInput.dispatchEvent(new Event("change"));
+            }
+        });
+
+        function hideResults() {
+            resultPanel.classList.add("hidden");
+            errorPanel.classList.add("hidden");
+        }
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            hideResults();
+            submitBtn.disabled = true;
+            submitLabel.textContent = "Scanning…";
+            dropzone.classList.add("scanning");
+
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+
+            try {
+                const res = await fetch("/predict", { method: "POST", body: formData });
+                const data = await res.json();
+
+                if (!res.ok) throw new Error(data.detail || "Prediction failed");
+
+                resultClass.textContent = data.predicted_class;
+                resultConfidence.textContent = (data.confidence * 100).toFixed(1) + "%";
+
+                topkList.innerHTML = "";
+                if (data.top_k && data.top_k.length) {
+                    data.top_k.forEach(r => {
+                        const pct = (r.confidence * 100).toFixed(1);
+                        const row = document.createElement("div");
+                        row.className = "topk-row";
+                        row.innerHTML = `
+                            <span class="topk-name mono">${r.class}</span>
+                            <div class="topk-bar-track"><div class="topk-bar-fill" style="width:${pct}%"></div></div>
+                            <span class="topk-pct mono">${pct}%</span>
+                        `;
+                        topkList.appendChild(row);
+                    });
+                }
+
+                resultPanel.classList.remove("hidden");
+            } catch (err) {
+                errorText.textContent = err.message;
+                errorPanel.classList.remove("hidden");
+            } finally {
+                submitBtn.disabled = false;
+                submitLabel.textContent = "Run Inference";
+                dropzone.classList.remove("scanning");
+            }
+        });
+    </script>
+</body>
+</html>

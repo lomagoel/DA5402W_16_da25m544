@@ -1,0 +1,29 @@
+version: "3.8"
+
+services:
+  serving-app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - MLFLOW_MODEL_NAME=image_classifier
+      - MLFLOW_MODEL_STAGE=Production
+      - DEVICE=cpu
+    depends_on:
+      - mlflow
+    restart: unless-stopped
+
+  # Minimal local MLflow tracking server for dev/testing.
+  # In the real team setup, point MLFLOW_TRACKING_URI at wherever
+  # Varun's training pipeline already logs to instead of running this.
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.14.1
+    command: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri /mlruns --default-artifact-root /mlruns
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow-data:/mlruns
+
+volumes:
+  mlflow-data:
