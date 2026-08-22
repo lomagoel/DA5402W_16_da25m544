@@ -66,4 +66,32 @@ build_and_deploy_dev:
       - name: push to artifact registry
         run:  docker push $IMAGE_URI
 
+  sync_dag:
+    needs: build_and_deploy
+    runs-on: ubuntu-latest
+    environment: prd
+    env:
+      COMPOSER_ENV: "${{vars.COMPOSER_ENV}}"
+      COMPOSER_LOCATION: "${{vars.COMPOSER_LOCATION}}"
+      COMPOSER_DAGS_BUCKET: "${{vars.COMPOSER_DAGS_BUCKET}}"
 
+    steps:
+      - name: download code
+        uses: actions/checkout@v4
+
+      - name: gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: authenticate using SA
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{secrets.SA_KEY}}
+
+      - name: sync DAG files to Composer bucket
+        run: gsutil cp dags/image_classification_dag.py dags/dag_config.py $COMPOSER_DAGS_BUCKET/dags/
+
+      - name: update IMAGE_TAG Airflow variable
+        run: |
+          gcloud composer environments run $COMPOSER_ENV \
+            --location $COMPOSER_LOCATION \
+            variables set -- IMAGE_TAG ${{github.sha}}
