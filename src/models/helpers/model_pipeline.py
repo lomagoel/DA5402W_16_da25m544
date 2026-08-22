@@ -28,7 +28,7 @@ class ModelPipeline():
     def train(self, model, train_dataset, test_dataset, config, mlflow_artifact_name):
         print('Best config model training...')
         with mlflow.start_run(
-            run_name='BEST_MODEL'
+            run_name=f'train_{mlflow_artifact_name}'
         ):
             model_engine = ModelTrainer(model, config['batch_size'], config['optim'])
             model_engine.train(train_dataset)
@@ -36,7 +36,7 @@ class ModelPipeline():
             mlflow.log_metrics(test_metrics)
             mlflow.pytorch.log_model(
                 pytorch_model=model,
-                name=mlflow_artifact_name,
-                serialization_format='pickle'
+                artifact_path='models',
+                registered_model_name=mlflow_artifact_name
             )
 
