@@ -1,5 +1,5 @@
 # take pytorch with cuda image
-FROM docker pull apache/beam_python3.12_sdk:2.76.0rc2
+FROM apache/beam_python3.12_sdk:2.76.0rc2
 
 # image lib update
 RUN apt-get update && apt-get install -y --no-install-recommends \
