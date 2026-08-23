@@ -9,7 +9,7 @@ import torchvision.transforms as T
 import hashlib
 
 # Create a global cache of sorted files per class to enable deterministic index filtering
-import glob
+
 from collections import defaultdict
 
 # Use .get() to provide a fallback value if the environment variable isn't set
