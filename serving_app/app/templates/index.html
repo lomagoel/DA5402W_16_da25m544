@@ -23,6 +23,15 @@
 
         <main class="panel">
             <form id="predict-form">
+                <div class="model-select-row">
+                    <label for="model-select" class="mono-label">MODEL</label>
+                    <select id="model-select" class="model-select">
+                        {% for m in models %}
+                        <option value="{{ m }}" {% if m == default_model %}selected{% endif %}>{{ m }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
                 <label for="file-input" class="viewfinder" id="dropzone">
                     <span class="bracket bracket-tl"></span>
                     <span class="bracket bracket-tr"></span>
@@ -65,7 +74,7 @@
         </main>
 
         <footer class="page-footer">
-            <span class="mono">GET /health · POST /predict · POST /predict/base64</span>
+            <span class="mono">GET /health · GET /models · POST /predict/{model} · POST /predict/base64/{model}</span>
         </footer>
     </div>
 
@@ -85,16 +94,17 @@
         const errorText = document.getElementById("error-text");
         const statusPill = document.getElementById("model-status");
         const statusText = document.getElementById("status-text");
+        const modelSelect = document.getElementById("model-select");
 
         async function checkHealth() {
             try {
                 const res = await fetch("/health");
                 const data = await res.json();
                 if (data.status === "ok") {
-                    statusText.textContent = `${data.model_name} · ${data.model_stage} · v${data.model_version}`;
+                    statusText.textContent = `Model loaded: ${data.model_name} v${data.model_version}`;
                     statusPill.className = "status-pill status-ok";
                 } else {
-                    statusText.textContent = "No model loaded — predictions unavailable";
+                    statusText.textContent = "Model not loaded";
                     statusPill.className = "status-pill status-warn";
                 }
             } catch (e) {
@@ -142,9 +152,10 @@
 
             const formData = new FormData();
             formData.append("file", fileInput.files[0]);
+            const modelName = modelSelect.value;
 
             try {
-                const res = await fetch("/predict", { method: "POST", body: formData });
+                const res = await fetch(`/predict/${encodeURIComponent(modelName)}`, { method: "POST", body: formData });
                 const data = await res.json();
 
                 if (!res.ok) throw new Error(data.detail || "Prediction failed");
@@ -168,6 +179,7 @@
                 }
 
                 resultPanel.classList.remove("hidden");
+                checkHealth();
             } catch (err) {
                 errorText.textContent = err.message;
                 errorPanel.classList.remove("hidden");

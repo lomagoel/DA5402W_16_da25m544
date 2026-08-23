@@ -1,24 +1,20 @@
 """
 Loads the trained model from the MLflow Model Registry.
 
-Two things your teammates' training code (train_DA25M607.py / the Ray
-training jobs) needs to do for this to work:
-  1. Log the model with `mlflow.pytorch.log_model(model, "model")` (or the
-     appropriate flavor for whatever framework is used) inside the run.
-  2. Register that model version under a fixed name, e.g.:
-       mlflow.register_model(f"runs:/{run_id}/model", "image_classifier")
-     and promote the version you want served to a stage (e.g. "Production")
-     via the MLflow UI or `MlflowClient.transition_model_version_stage`.
-
-This module then loads via the "models:/<name>/<stage>" URI, so a new
-model version can be promoted to Production without redeploying the API —
-just call POST /reload.
+By default this always resolves to the LATEST registered version of the
+model at load/reload time — no need to know or hardcode a version number,
+and no code or env-var change is needed when the training side registers
+a new version. Set MLFLOW_MODEL_VERSION to pin to a specific version or
+alias instead, if that's ever needed.
 """
 import logging
 import threading
 
 import mlflow
 import mlflow.pyfunc
+import torch
+import functools
+torch.load = functools.partial(torch.load, map_location=torch.device("cpu"))
 
 from app.config import settings
 
@@ -29,17 +25,29 @@ _model_version = None
 _lock = threading.Lock()
 
 
-def _model_uri() -> str:
-    if settings.MLFLOW_MODEL_VERSION:
-        return f"models:/{settings.MLFLOW_MODEL_NAME}/{settings.MLFLOW_MODEL_VERSION}"
-    return f"models:/{settings.MLFLOW_MODEL_NAME}/{settings.MLFLOW_MODEL_STAGE}"
+def _resolve_latest_version(client) -> str:
+    """
+    Queries the registry for every version of the configured model and
+    returns the highest version number as a string. This is what makes
+    the app pick up new training runs automatically.
+    """
+    versions = client.search_model_versions(f"name='{settings.MLFLOW_MODEL_NAME}'")
+    if not versions:
+        raise ValueError(f"No versions found for registered model '{settings.MLFLOW_MODEL_NAME}'")
+    latest = max(versions, key=lambda v: int(v.version))
+    return latest.version
+
+
+def _model_uri(resolved_version: str) -> str:
+    return f"models:/{settings.MLFLOW_MODEL_NAME}/{resolved_version}"
 
 
 def load_model(force: bool = False):
     """
-    Loads (or reloads) the model from the MLflow registry.
-    Thread-safe; safe to call from the /reload endpoint while requests
-    are in flight (readers get the old model until the swap completes).
+    Loads (or reloads) the model from the MLflow registry, resolving to
+    the latest version unless MLFLOW_MODEL_VERSION pins a specific one.
+    Thread-safe; safe to call from /reload while requests are in flight —
+    readers get the old model until the swap completes.
     """
     global _model, _model_version
 
@@ -50,21 +58,15 @@ def load_model(force: bool = False):
         mlflow.set_tracking_uri(settings.MLFLOW_TRACKING_URI)
         client = mlflow.tracking.MlflowClient()
 
-        uri = _model_uri()
-        logger.info(f"Loading model from {uri}")
-
-        # Resolve the actual version number for logging/health checks
         if settings.MLFLOW_MODEL_VERSION:
             resolved_version = settings.MLFLOW_MODEL_VERSION
+            logger.info(f"Using pinned version: {resolved_version}")
         else:
-            try:
-                versions = client.get_latest_versions(
-                    settings.MLFLOW_MODEL_NAME, stages=[settings.MLFLOW_MODEL_STAGE]
-                )
-                resolved_version = versions[0].version if versions else "unknown"
-            except Exception as e:
-                logger.warning(f"Could not resolve version metadata: {e}")
-                resolved_version = "unknown"
+            resolved_version = _resolve_latest_version(client)
+            logger.info(f"Auto-resolved latest version: {resolved_version}")
+
+        uri = _model_uri(resolved_version)
+        logger.info(f"Loading model '{settings.MLFLOW_MODEL_NAME}' from {uri}")
 
         model = mlflow.pyfunc.load_model(uri)
 
