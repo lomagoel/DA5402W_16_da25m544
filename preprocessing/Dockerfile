@@ -1,5 +1,5 @@
-FROM apache/beam_python3.12_sdk:2.76.0rc2
-
+#FROM apache/beam_python3.12_sdk:2.76.0rc2
+FROM scratch
 # Install system dependencies, CUDA repo keys, and gcsfuse
 # Install FUSE and the official Google gcsfuse tool
 RUN apt-get update && apt-get install -y --no-install-recommends \

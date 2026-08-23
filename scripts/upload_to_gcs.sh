@@ -3,8 +3,8 @@
 # ==========================================
 # Configuration Variables
 # ==========================================
-LOCAL_FOLDER_PATH="/home/amol/Downloads/archive/"      # The local folder to upload
-GCS_BUCKET_URI="gs://dataset_mtech/caltech-101/"  # The destination bucket URI
+LOCAL_FOLDER_PATH="/home/amol/Downloads/caltech-101/"      # The local folder to upload
+GCS_BUCKET_URI="gs://dataset_mtech/raw_caltech-101/"  # The destination bucket URI
 SERVICE_ACCOUNT_JSON="./gcp-key.json"   # @TODO: shift to secrests
 
 # ==========================================
