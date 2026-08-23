@@ -11,10 +11,14 @@ import hashlib
 import glob
 from collections import defaultdict
 
-in_gcs_root = "gs://dataset_mtech/raw_caltech-101/"
-out_gcs_root = "gs://dataset_mtech/caltech-101/"
+# Use .get() to provide a fallback value if the environment variable isn't set
+in_gcs_root = os.environ.get("IN_GCS_ROOT", "gs://dataset_mtech/raw_caltech-101/")
+out_gcs_root = os.environ.get("OUT_GCS_ROOT", "gs://dataset_mtech/caltech-101/")
 
-all_files = glob.glob(os.path.join(in_gcs_root, "*", "*.jpg"))
+print(f"Reading data from: {in_gcs_root}")
+print(f"Saving data to: {out_gcs_root}")
+
+all_files = glob(os.path.join(in_gcs_root, "*", "*.jpg"))
 
 # Group and sort files by class folder name
 class_file_map = defaultdict(list)
