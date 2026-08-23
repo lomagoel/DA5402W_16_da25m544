@@ -12,7 +12,7 @@ WORKDIR /app
 
 
 # copy content 
-COPY  ./augment.py ./src   
+COPY  ./augment.py .   
 
 # install requirements
 COPY ./requirements.txt .
