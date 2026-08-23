@@ -35,9 +35,9 @@ jobs:
       - name: push preprocessing to artifact registry
         run: docker push $DATA_IMAGE_URI
 
-      - name: build training
-        working-directory: ./training/models
-        run: docker build -t $TRAINING_IMAGE_URI .
+      # - name: build training
+      #   working-directory: ./training/models
+      #   run: docker build -t $TRAINING_IMAGE_URI .
 
-      - name: push training to artifact registry
-        run: docker push $TRAINING_IMAGE_URI
+      # - name: push training to artifact registry
+      #   run: docker push $TRAINING_IMAGE_URI

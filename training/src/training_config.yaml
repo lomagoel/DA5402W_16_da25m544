@@ -1,0 +1,24 @@
+data:
+  num_classes: 102
+  storage_mount_path: '~/data/caltech-101'
+
+mlflow:
+  experiment_name: "caltech101-training"
+  tracking_uri: http://34.47.164.107:5000
+
+# create config
+training:
+  epochs: 3
+
+tuning:
+  tune_trials: 5
+
+# In TrainConfig: pretrained defaults to True.
+# Note: CLI flag --pretrained in train.py is inverted (store_true means "Do not load ImageNet weights.")
+pretrained: true
+
+# In TrainConfig: freeze_backbone defaults to True.
+# YAML counterpart for CLI --unfreeze-backbone (inverse semantics).
+freeze_backbone: true
+
+device: "cuda"  # auto | cpu | cuda | mps
