@@ -5,7 +5,7 @@ FROM ubuntu:focal
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     fuse \
-    ca-certificates \
+    ca-certificates
     
 # Set working directory inside which all code will be saved
 WORKDIR /app
