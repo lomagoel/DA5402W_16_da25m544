@@ -72,6 +72,7 @@ class ModelTrainer():
             val_loss_metric.reset()
             val_metrics.reset()
 
+            print(f'For epoch {epoch + 1} - train loss: {loss_metrics['train_loss']}, val loss: {loss_metrics['val_loss']}')
 
 
     def evaluate(self, data):
