@@ -24,3 +24,7 @@ gcloud iam service-accounts keys create gcp-key.json --iam-account=my-service-ac
 
 1. Download caltech101 dataset
 2. Run `data_division.py`
+
+
+# apply through codex
+move tr

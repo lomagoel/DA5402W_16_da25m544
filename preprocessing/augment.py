@@ -11,8 +11,10 @@ import hashlib
 import glob
 from collections import defaultdict
 
-gcs_root = "/home/amol/Downloads/archive/"
-all_files = glob.glob(os.path.join(gcs_root, "caltech-101", "*", "*.jpg"))
+in_gcs_root = "gs://dataset_mtech/raw_caltech-101/"
+out_gcs_root = "gs://dataset_mtech/caltech-101/"
+
+all_files = glob.glob(os.path.join(in_gcs_root, "*", "*.jpg"))
 
 # Group and sort files by class folder name
 class_file_map = defaultdict(list)
@@ -109,13 +111,11 @@ class DirectImageWriter(beam.DoFn):
             
         yield final_path
 
-gcs_root = "/home/amol/Downloads/archive/"
-
 with beam.Pipeline() as pipeline:
     # 1. Base files loader
     raw_images = (
         pipeline 
-        | "Find Images" >> fileio.MatchFiles(gcs_root + "caltech-101/*/*.jpg")
+        | "Find Images" >> fileio.MatchFiles(in_gcs_root + "caltech-101/*/*.jpg")
         | "Read Matches" >> fileio.ReadMatches()
         | "Extract Data" >> beam.Map(lambda f: f.metadata.path)
     )
@@ -126,7 +126,7 @@ with beam.Pipeline() as pipeline:
         | "Filter Train Slice" >> beam.Filter(get_stratified_split_filter(target_partition=0))
         | "Reshuffle Train" >> beam.Reshuffle()
         | "Augment Train" >> beam.ParDo(PreProcess(is_train=True))
-        | "Direct Disk Write Train" >> beam.ParDo(DirectImageWriter(base_output_path=os.path.join(gcs_root, "train")))
+        | "Direct Disk Write Train" >> beam.ParDo(DirectImageWriter(base_output_path=os.path.join(out_gcs_root, "train")))
     )
 
     # 3. RUN SEPARATELY FOR VALIDATION (Target Partition: 1)
@@ -135,7 +135,7 @@ with beam.Pipeline() as pipeline:
         | "Filter Val Slice" >> beam.Filter(get_stratified_split_filter(target_partition=1))
         | "Reshuffle Val" >> beam.Reshuffle()
         | "Augment Val" >> beam.ParDo(PreProcess(is_train=False))
-        | "Direct Disk Write Val" >> beam.ParDo(DirectImageWriter(base_output_path=os.path.join(gcs_root, "val")))
+        | "Direct Disk Write Val" >> beam.ParDo(DirectImageWriter(base_output_path=os.path.join(out_gcs_root, "val")))
     )
 
     # 4. RUN SEPARATELY FOR TEST (Target Partition: 2)
@@ -144,7 +144,7 @@ with beam.Pipeline() as pipeline:
         | "Filter Test Slice" >> beam.Filter(get_stratified_split_filter(target_partition=2))
         | "Reshuffle Test" >> beam.Reshuffle()
         | "Augment Test" >> beam.ParDo(PreProcess(is_train=False))
-        | "Direct Disk Write Test" >> beam.ParDo(DirectImageWriter(base_output_path=os.path.join(gcs_root, "test")))
+        | "Direct Disk Write Test" >> beam.ParDo(DirectImageWriter(base_output_path=os.path.join(out_gcs_root, "test")))
     )
 
 # Execution completes here before calculating folder summary counts
@@ -152,7 +152,7 @@ splits = ["train", "val", "test"]
 
 print("\n=== DATASET SPLIT COUNTS ===")
 for split in splits:
-    split_dir = os.path.join(gcs_root, split)
+    split_dir = os.path.join(out_gcs_root, split)
     images = glob(split_dir+ "/*/*.jpg")
     categories = set(os.path.basename(os.path.dirname(p)) for p in images)
     print(f"Split: {split:<6} | Total Images: {len(images):<5} | Unique Classes: {len(categories)}")

@@ -1,7 +1,9 @@
+import pdb
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from src.models.helpers.data_helper import dataloader
+from training.models.helpers.data_helper import get_dataloader
 from torchmetrics import MeanMetric, MetricCollection, Accuracy, Precision, Recall, F1Score, AUROC
 
 
@@ -16,8 +18,8 @@ class ModelTrainer():
     def train(self, train_dataset, val_dataset, label_to_idx,epochs=3, tune_callback=None):
 
         self.num_classes = len(label_to_idx)
-        train_loader = dataloader(train_dataset, batch_size=self.batch_size, shuffle=True)
-        val_loader = dataloader(val_dataset, batch_size=self.batch_size, shuffle=False)
+        train_loader = get_dataloader(train_dataset, batch_size=self.batch_size, shuffle=False)
+        val_loader = get_dataloader(val_dataset, batch_size=self.batch_size, shuffle=False)
 
         train_loss_metric = MeanMetric().to(self.device)
         val_loss_metric = MeanMetric().to(self.device)
@@ -33,6 +35,10 @@ class ModelTrainer():
         for epoch in range(epochs):
 
             self.model.train()
+            # print image size
+     
+            
+          
             for images, labels in train_loader:
                 images, labels = images.to(self.device), labels.to(self.device)
 
@@ -75,7 +81,7 @@ class ModelTrainer():
 
 
     def evaluate(self, data):
-        test_loader = dataloader(data, batch_size=self.batch_size, shuffle=False)
+        test_loader = get_dataloader(data, batch_size=self.batch_size, shuffle=False)
 
         test_loss_metric = MeanMetric().to(self.device)
         test_metrics = MetricCollection({

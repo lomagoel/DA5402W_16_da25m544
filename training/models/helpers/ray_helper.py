@@ -1,4 +1,4 @@
-from src.models.helpers.model_trainer import ModelTrainer
+from training.models.helpers.model_trainer import ModelTrainer
 import ray
 from ray import tune
 from ray.air.integrations.mlflow import setup_mlflow
@@ -29,15 +29,15 @@ class RayDriver():
         self.resources = resources
         self.mlflow_config = mlflow_config
 
-    def _worker_job(self, tune_config, data):
+    def _worker_job(self, tune_config, training_dataset, validation_dataset,label_to_idx):
         context = ray.tune.get_context()
         run_name = f'RAY_WORKER_{context.get_trial_id()}' 
         worker = RayWorker(run_name, self.mlflow_config)
-        worker.tune(self.model, data, tune_config)
+        worker.tune(self.model, training_dataset, validation_dataset, label_to_idx, tune_config)
 
-    def tune(self, data, search_space, num_samples=5):
+    def tune(self, training_dataset, validation_dataset, label_to_idx, search_space, num_samples=5):
         tuner = tune.Tuner(
-            tune.with_resources(tune.with_parameters(self._worker_job, data=data), self.resources),
+            tune.with_resources(tune.with_parameters(self._worker_job, training_dataset=training_dataset, validation_dataset=validation_dataset, label_to_idx=label_to_idx), self.resources),
             param_space=search_space,
             tune_config=tune.TuneConfig(num_samples=num_samples)
         )

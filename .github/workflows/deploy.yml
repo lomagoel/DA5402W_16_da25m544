@@ -1,4 +1,3 @@
-#name of pipeline
 name: deploy ML training
 
 on:
@@ -8,62 +7,37 @@ on:
       - dev
 
 jobs:
-build_and_deploy_dev:
-    runs-on: ubuntu-latest
-    environment: dev
-    env:
-      IMAGE_URI: "${{vars.IMAGE_URI}}/caltech-mobilenetv2:${{github.sha}}"
-
-    steps:
-      - name: download code
-        uses: actions/checkout@v4
-      
-      - name: gcloud CLI
-        uses: google-github-actions/setup-gcloud@v2
-
-      - name: build
-        run:  docker build -t $IMAGE_URI .
-
-
-      - name: authenticate using SA
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json:  ${{secrets.SA_KEY}}
-
-      - name: configure docker auth mechanism
-        run: gcloud auth configure-docker ${{AUTH_URL}}
-
-      - name: push to artifact registry
-        run:  docker push $IMAGE_URI
-
-
-
   build_and_deploy:
     runs-on: ubuntu-latest
     environment: prd
     env:
-      IMAGE_URI: "${{vars.IMAGE_URI}}/caltech-mobilenetv2:${{github.sha}}"
-
+      DATA_IMAGE_URI: "${{vars.IMAGE_URI}}/data_preprocessing:${{github.sha}}"
+      TRAINING_IMAGE_URI: "${{vars.IMAGE_URI}}/model_training:${{github.sha}}"
     steps:
       - name: download code
         uses: actions/checkout@v4
-      
-      - name: gcloud CLI
-        uses: google-github-actions/setup-gcloud@v2
-
-      - name: build
-        run:  docker build -t $IMAGE_URI .
-
 
       - name: authenticate using SA
         uses: google-github-actions/auth@v2
         with:
-          credentials_json:  ${{secrets.SA_KEY}}
+          credentials_json: ${{secrets.SA_KEY}}
+      
+      - name: gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
 
       - name: configure docker auth mechanism
         run: gcloud auth configure-docker ${{vars.AUTH_URL}}
 
-      - name: push to artifact registry
-        run:  docker push $IMAGE_URI
+      - name: build preprocessing
+        working-directory: ./preprocessing
+        run: docker build -t $DATA_IMAGE_URI .
+        
+      - name: push preprocessing to artifact registry
+        run: docker push $DATA_IMAGE_URI
 
+      - name: build training
+        working-directory: ./training/models
+        run: docker build -t $TRAINING_IMAGE_URI .
 
+      - name: push training to artifact registry
+        run: docker push $TRAINING_IMAGE_URI
