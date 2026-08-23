@@ -1,16 +1,17 @@
+data:
+  num_classes: 101
+  storage_mount_path: '~/data/caltech-101'
 
-data_dir: "/gcs/caltech_1000/"  # dataset root directory
-experiment_name: "caltech101-mobilenetv2"
-tracking_uri: null  # optional MLflow tracking URI
+mlflow:
+  experiment_name: "caltech101-training"
+  tracking_uri: http://34.47.164.107:5000
 
 # create config
-epochs: 10
-batch_size: 32
-learning_rate: 0.001
-weight_decay: 0.0001
-image_size: 224
-num_workers: 2
-seed: 42
+training:
+  epochs: 3
+
+tuning:
+  tune_trials: 5
 
 # In TrainConfig: pretrained defaults to True.
 # Note: CLI flag --pretrained in train.py is inverted (store_true means "Do not load ImageNet weights.")

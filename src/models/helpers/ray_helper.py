@@ -16,24 +16,25 @@ class RayWorker():
         tune.report(report_metrics)
         self.mlflow.log_metrics(final_metrics, step=epoch)
 
-    def tune(self, model, train_dataset, validation_dataset, label_to_idx, tune_config, epochs=3):
-        trainer = ModelTrainer(model, tune_config['batch_size'], tune_config['optim'])
-        trainer.train(train_dataset, validation_dataset, label_to_idx, epochs=epochs, tune_callback=lambda r,f,e: self._log(r, f, e))
+    def tune(self, model, train_dataset, validation_dataset, tune_config, num_classes, epochs=3):
+        trainer = ModelTrainer(model, tune_config['batch_size'], tune_config['optim'], num_classes)
+        trainer.train(train_dataset, validation_dataset, epochs=epochs, tune_callback=lambda r,f,e: self._log(r, f, e))
         self.mlflow.end_run()
 
 
 class RayDriver():
-    def __init__(self, model, resources, mlflow_config):
+    def __init__(self, model, resources, mlflow_config, num_classes):
         ray.init()
         self.model = model
         self.resources = resources
         self.mlflow_config = mlflow_config
+        self.num_classes = num_classes
 
     def _worker_job(self, tune_config, data):
         context = ray.tune.get_context()
-        run_name = f'RAY_WORKER_{context.get_trial_id()}' 
+        run_name = f'ray_worker_{context.get_trial_id()}' 
         worker = RayWorker(run_name, self.mlflow_config)
-        worker.tune(self.model, data, tune_config)
+        worker.tune(self.model, *data, tune_config, self.num_classes)
 
     def tune(self, data, search_space, num_samples=5):
         tuner = tune.Tuner(

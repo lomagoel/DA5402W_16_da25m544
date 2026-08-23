@@ -1,6 +1,5 @@
 mlflow
-mlflow_skinny
-mlflow_tracing
 PyYAML
-ray
+ray[tune]
+torchvision
 torchmetrics

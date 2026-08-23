@@ -1,20 +1,22 @@
 import torch.nn as nn
-from torchvision import datasets, models
+from torchvision import models
 
 from src.models.helpers.model_pipeline import ModelPipeline
 from src.models.helpers.ray_helper import uniform_space, random_choice
 
-from src.models.helpers.data_helper import train_dataset, val_dataset, test_dataset, label_to_idx   
-
-MLFLOW_EXPERIMENT_NAME = 'MLOPS_PROJECT'
-MLFLOW_TRACKING_URI = 'http://127.0.0.1:5000'
-NUM_TUNE_TRIALS = 5
+from src.models.helpers.data_helper import get_datasets, load_config
 
 
+config = load_config('src/training_config.yaml')
+num_classes = config['data']['num_classes']
+storage_mount_path = config['data']['storage_mount_path']
+epochs = config['training']['epochs']
+
+train_dataset, val_dataset, test_dataset = get_datasets(storage_mount_path)
 
 model = models.mobilenet_v3_small(weights=models.MobileNet_V3_Small_Weights.DEFAULT)
-in_final_layer = model.classifier.in_features
-model.classifier = nn.Linear(in_final_layer, len(label_to_idx))  # Adjust the final layer for the number of classes
+in_final_layer = model.classifier[3].in_features
+model.classifier[3] = nn.Linear(in_final_layer, num_classes)
 
 search_space = {
     'optim':{
@@ -24,7 +26,6 @@ search_space = {
     'batch_size': random_choice([32, 64]),
 }
 
-model_pipeline = ModelPipeline(MLFLOW_EXPERIMENT_NAME, MLFLOW_TRACKING_URI)
-
-best_config = model_pipeline.tune(model, val_dataset.dataset, NUM_TUNE_TRIALS, search_space)
-model_pipeline.train(model, train_dataset, test_dataset, best_config, 'mobilenet_v3_small')
+model_pipeline = ModelPipeline(config['mlflow']['experiment_name'], config['mlflow']['tracking_uri'], num_classes)
+best_config = model_pipeline.tune(model, val_dataset, config['tuning']['tune_trials'], search_space)
+model_pipeline.train(model, train_dataset, val_dataset, test_dataset, best_config, epochs, 'mobilenet_v3_small')
