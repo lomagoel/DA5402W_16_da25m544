@@ -28,3 +28,7 @@ gcloud iam service-accounts keys create gcp-key.json --iam-account=my-service-ac
 
 # apply through codex
 move tr
+
+# augment
+source env/preprocessing/bin/activate
+python3 augment.py 
