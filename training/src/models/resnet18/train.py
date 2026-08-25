@@ -21,7 +21,7 @@ model.fc = nn.Linear(in_final_layer, num_classes)  # Adjust the final layer for 
 search_space = {
     'optim':{
         'lr': uniform_space(1e-4, 1e-2),
-        'weight_decay': uniform_space(1e-6, 1e-3)
+        'weight_decay': uniform_space(1e-3, 1e-6)
     },
     'batch_size': random_choice([32, 64]),
 }

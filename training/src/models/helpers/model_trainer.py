@@ -24,10 +24,7 @@ class ModelTrainer():
         val_metrics = MetricCollection({
             'val_f1_score': F1Score(task='multiclass', num_classes=self.num_classes, average='macro'),
             'val_accuracy_top1': Accuracy(task='multiclass', num_classes=self.num_classes, top_k=1),            
-            'val_accuracy_top5': Accuracy(task='multiclass', num_classes=self.num_classes, top_k=5),
-            'val_precision': Precision(task='multiclass', num_classes=self.num_classes, average='macro'),
-            'val_recall': Recall(task='multiclass', num_classes=self.num_classes, average='macro'),
-            'val_roc_auc': AUROC(task='multiclass', num_classes=self.num_classes, average='macro')
+            'val_accuracy_top5': Accuracy(task='multiclass', num_classes=self.num_classes, top_k=5)
         }).to(self.device)
 
         for epoch in range(epochs):
@@ -82,10 +79,7 @@ class ModelTrainer():
         test_metrics = MetricCollection({
             'test_f1_score': F1Score(task='multiclass', num_classes=self.num_classes, average='macro'),
             'test_accuracy_top1': Accuracy(task='multiclass', num_classes=self.num_classes, top_k=1),
-            'test_accuracy_top5': Accuracy(task='multiclass', num_classes=self.num_classes, top_k=5),
-            'test_precision': Precision(task='multiclass', num_classes=self.num_classes, average='macro'),
-            'test_recall': Recall(task='multiclass', num_classes=self.num_classes, average='macro'),
-            'test_roc_auc': AUROC(task='multiclass', num_classes=self.num_classes, average='macro')
+            'test_accuracy_top5': Accuracy(task='multiclass', num_classes=self.num_classes, top_k=5)
         }).to(self.device)
 
         self.model.eval()
