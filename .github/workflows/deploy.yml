@@ -38,31 +38,4 @@ build_and_deploy_dev:
 
 
 
-  build_and_deploy:
-    runs-on: ubuntu-latest
-    environment: prd
-    env:
-      IMAGE_URI: "${{vars.IMAGE_URI}}/caltech-mobilenetv2:${{github.sha}}"
-
-    steps:
-      - name: download code
-        uses: actions/checkout@v4
-      
-      - name: gcloud CLI
-        uses: google-github-actions/setup-gcloud@v2
-
-      - name: build
-        run:  docker build -t $IMAGE_URI .
-
-
-      - name: authenticate using SA
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json:  ${{secrets.SA_KEY}}
-
-      - name: configure docker auth mechanism
-        run: gcloud auth configure-docker ${{vars.AUTH_URL}}
-
-      - name: push to artifact registry
-        run:  docker push $IMAGE_URI
-
+  
