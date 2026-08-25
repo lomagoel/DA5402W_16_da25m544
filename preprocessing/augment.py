@@ -171,7 +171,7 @@ with beam.Pipeline() as pipeline:
 # Execution completes here before calculating folder summary counts
 splits = ["train", "val", "test"]
 
-print("\n=== DATASET SPLIT COUNTS ===")
+print("\n=== DATASET SPLIT COUNTS ==")
 for split in splits:
     split_dir = os.path.join(out_gcs_root, split)
     images = glob(split_dir + "/*/*.jpg")
